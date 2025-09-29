@@ -1,6 +1,6 @@
 import Spinner from '@/components/Spinner';
 import { ThemedView } from '@/components/themed-view';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function CountdownScreen() {
@@ -14,12 +14,8 @@ export default function CountdownScreen() {
   const [minutes, setMinutes] = useState(0);
   const [seconds, setSeconds] = useState(0);
 
-  // Refs for spinner navigation
-  const minutesRef = useRef(null);
-  const secondsRef = useRef(null);
-
   // Calculate formatted time for display
-  const formatTime = (milliseconds: number) => {
+  const formatTime = useCallback((milliseconds: number) => {
     const totalSeconds = Math.floor(milliseconds / 1000);
     const hrs = Math.floor(totalSeconds / 3600);
     const mins = Math.floor((totalSeconds % 3600) / 60);
@@ -27,39 +23,81 @@ export default function CountdownScreen() {
     const ms = Math.floor((milliseconds % 1000) / 10);
 
     return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}.${ms.toString().padStart(2, '0')}`;
-  };
+  }, []);
+
+  // Обновляем timeLeft при изменении значений спиннеров, но только если таймер не запущен
+  useEffect(() => {
+    if (!isRunning) {
+      const totalTimeMs = (hours * 3600 + minutes * 60 + seconds) * 1000;
+      setTimeLeft(totalTimeMs);
+    }
+  }, [hours, minutes, seconds, isRunning]);
 
   // Check if minutes should auto-increment
-  const handleHoursReachedMax = () => {
-    if (minutes < 59) {
-      setMinutes(prev => prev + 1);
-    }
-  };
+  const handleHoursReachedMax = useCallback(() => {
+    setMinutes(prev => {
+      if (prev < 59) {
+        return prev + 1;
+      }
+      return prev;
+    });
+  }, []);
 
-  const handleHoursReachedMin = () => {
-    if (minutes > 0) {
-      setMinutes(prev => prev - 1);
-    }
-  };
+  const handleHoursReachedMin = useCallback(() => {
+    setMinutes(prev => {
+      if (prev > 0) {
+        return prev - 1;
+      }
+      return prev;
+    });
+  }, []);
 
-  const handleMinutesReachedMax = () => {
-    if (hours < 23) {
-      setHours(prev => prev + 1);
-    } else if (seconds < 59) {
-      setSeconds(prev => prev + 1);
-    }
-  };
+  const handleMinutesReachedMax = useCallback(() => {
+    setHours(prevHours => {
+      if (prevHours < 23) {
+        return prevHours + 1;
+      }
+      return prevHours;
+    });
+    
+    // Also increment seconds if hours are at max
+    setHours(currentHours => {
+      if (currentHours === 23) {
+        setSeconds(prevSeconds => {
+          if (prevSeconds < 59) {
+            return prevSeconds + 1;
+          }
+          return prevSeconds;
+        });
+      }
+      return currentHours; // Не меняем часы, просто выполняем побочный эффект
+    });
+  }, []);
 
-  const handleMinutesReachedMin = () => {
-    if (hours > 0) {
-      setHours(prev => prev - 1);
-    } else if (seconds > 0) {
-      setSeconds(prev => prev - 1);
-    }
-  };
+  const handleMinutesReachedMin = useCallback(() => {
+    setHours(prevHours => {
+      if (prevHours > 0) {
+        return prevHours - 1;
+      }
+      return prevHours;
+    });
+    
+    // Also decrement seconds if hours are at min
+    setHours(currentHours => {
+      if (currentHours === 0) {
+        setSeconds(prevSeconds => {
+          if (prevSeconds > 0) {
+            return prevSeconds - 1;
+          }
+          return prevSeconds;
+        });
+      }
+      return currentHours; // Не меняем часы, просто выполняем побочный эффект
+    });
+  }, []);
 
   // Start the countdown
-  const startCountdown = () => {
+  const startCountdown = useCallback(() => {
     if (!isRunning) {
       // Calculate total time from spinner values
       const totalTimeMs = (hours * 3600 + minutes * 60 + seconds) * 1000;
@@ -67,6 +105,8 @@ export default function CountdownScreen() {
       // Only start if there's time to count down
       if (totalTimeMs > 0) {
         setIsRunning(true);
+        // Set initial time left based on spinner values
+        setTimeLeft(totalTimeMs);
         const endTime = Date.now() + totalTimeMs;
         intervalRef.current = setInterval(() => {
           const remaining = Math.max(0, endTime - Date.now());
@@ -79,50 +119,27 @@ export default function CountdownScreen() {
         }, 10); // Update every 10ms for smoother display
       }
     }
-  };
+  }, [isRunning, hours, minutes, seconds]);
 
   // Stop the countdown
-  const stopCountdown = () => {
+  const stopCountdown = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
     setIsRunning(false);
-  };
-
-  // Reset the countdown
-  const resetCountdown = () => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
-    setTimeLeft(0);
-    setIsRunning(false);
-  };
-
-  // Cleanup on component unmount
-  useEffect(() => {
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
   }, []);
 
-  // Stop the stopwatch
-  const stopStopwatch = () => {
-    if (isRunning && intervalRef.current) {
-      setIsRunning(false);
-      clearInterval(intervalRef.current);
-    }
-  };
-
-  // Reset the stopwatch
-  const resetStopwatch = () => {
+  // Reset the countdown
+  const resetCountdown = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
-    setTime(0);
+    setHours(0);
+    setMinutes(0);
+    setSeconds(0);
+    setTimeLeft(0);
     setIsRunning(false);
-  };
+  }, []);
 
   // Cleanup on component unmount
   useEffect(() => {
@@ -168,21 +185,21 @@ export default function CountdownScreen() {
         <View style={styles.quickSetContainer}>
           <TouchableOpacity 
             style={styles.quickSetButton}
-            onPress={() => { setMinutes(5); setSeconds(0); }}
+            onPress={() => { setHours(0);setMinutes(5); setSeconds(0); }}
           >
             <Text style={styles.buttonText}>5 МИН</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
             style={styles.quickSetButton}
-            onPress={() => { setMinutes(10); setSeconds(0); }}
+            onPress={() => { setHours(0); setMinutes(10); setSeconds(0); }}
           >
             <Text style={styles.buttonText}>10 МИН</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
             style={styles.quickSetButton}
-            onPress={() => { setMinutes(15); setSeconds(0); }}
+            onPress={() => { setHours(0); setMinutes(15); setSeconds(0); }}
           >
             <Text style={styles.buttonText}>15 МИН</Text>
           </TouchableOpacity>

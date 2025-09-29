@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Animated, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 interface SpinnerProps {
   value: number;
@@ -12,51 +12,61 @@ interface SpinnerProps {
   onReachedMin?: () => void;
 }
 
-const { height } = Dimensions.get('window');
-
-const Spinner: React.FC<SpinnerProps> = ({ value, onValueChange, maxValue, minValue = 0, label, autoFocus, onReachedMax, onReachedMin }) => {
+const Spinner: React.FC<SpinnerProps> = React.memo(({ value, onValueChange, maxValue, minValue = 0, label, autoFocus, onReachedMax, onReachedMin }) => {
   const [selectedValue, setSelectedValue] = useState<number>(value);
   const [isScrolling, setIsScrolling] = useState(false);
   const animation = useRef(new Animated.Value(0)).current;
   const scrollViewRef = useRef<ScrollView>(null);
   const itemHeight = 50; // высота каждого элемента
-  const visibleItems = 3; // количество видимых элементов (всегда нечетное для центрального элемента)
   
-  // Для циклической прокрутки создаем расширенный массив значений
+  // Для циклической прокрутки создаем массив с повторяющимися значениями
+  // Используем нечетное количество повторений, чтобы центральная часть была корректной
+  const repetitionCount = 3;
   const totalValues = maxValue - minValue + 1;
-  const extendedValues = Array.from({ length: totalValues * 3 }, (_, i) => {
-    const actualValue = minValue + (i % totalValues);
-    return actualValue;
-  });
+  const extendedValues = React.useMemo(() => {
+    const values = [];
+    // Создаем 3 копии значений для циклической прокрутки
+    for (let rep = 0; rep < repetitionCount; rep++) {
+      for (let i = minValue; i <= maxValue; i++) {
+        values.push(i);
+      }
+    }
+    return values;
+  }, [maxValue, minValue]);
   
-  // Индекс центрального значения для начальной позиции
-  const centerIndex = Math.floor(extendedValues.length / 2);
-  const initialValueIndex = centerIndex + (value - minValue);
+  // Центральный индекс - середина центральной копии значений
+  const centerIndex = React.useMemo(() => {
+    // Первая треть - первая копия, вторая треть - центральная копия, третья треть - последняя копия
+    const centralStartIndex = totalValues; // после первой копии
+    const centralValueIndex = value - minValue; // индекс нужного значения в копии
+    return centralStartIndex + centralValueIndex;
+  }, [totalValues, value, minValue]);
 
   // Обновляем выбранное значение, когда оно изменяется снаружи
   useEffect(() => {
-    setSelectedValue(value);
-    scrollToValue(value);
-  }, [value]);
-  
-  // Прокручиваем до нужного значения
-  const scrollToValue = (value: number) => {
-    const index = centerIndex + (value - minValue);
-    const offset = index * itemHeight;
+    const constrainedValue = Math.max(minValue, Math.min(maxValue, value));
+    setSelectedValue(constrainedValue);
     
+    // Пересчитываем центральный индекс
+    const newCenterIndex = totalValues + (constrainedValue - minValue);
     if (scrollViewRef.current) {
-      scrollViewRef.current.scrollTo({ y: offset, animated: false });
+      scrollViewRef.current.scrollTo({ y: newCenterIndex * itemHeight, animated: false });
     }
-  };
+  }, [value, minValue, maxValue, totalValues, itemHeight]);
 
   // Обработка окончания прокрутки
-  const onScrollEnd = (event: any) => {
-    const scrollY = event.nativeEvent.contentOffset.y;
+  const onScrollEnd = useCallback((event: any) => {
+    const scrollY = Math.max(0, event.nativeEvent.contentOffset.y);
     const index = Math.round(scrollY / itemHeight);
     
-    // Нормализуем индекс к центральной части массива
-    const normalizedIndex = ((index % totalValues) + totalValues) % totalValues;
-    const newValue = minValue + normalizedIndex;
+    // Убедимся, что индекс в допустимом диапазоне
+    const validIndex = Math.min(Math.max(0, index), extendedValues.length - 1);
+    
+    // Получаем значение по индексу
+    const newValue = extendedValues[validIndex];
+    
+    // Вычисляем индекс в центральной копии для позиционирования
+    const centralIndex = totalValues + (newValue - minValue);
     
     // Проверяем, достигли ли мы максимального или минимального значения при прокрутке
     if (selectedValue === maxValue && newValue !== maxValue && onReachedMax) {
@@ -65,29 +75,28 @@ const Spinner: React.FC<SpinnerProps> = ({ value, onValueChange, maxValue, minVa
       onReachedMin();
     }
     
-    // Прокручиваем к центру, если нужно
-    if (index < centerIndex - totalValues/2 || index > centerIndex + totalValues/2) {
-      // Возвращаем к центральной позиции, чтобы избежать ограничений ScrollView
-      setTimeout(() => {
-        scrollToValue(newValue);
-      }, 0);
-    }
+    // Возвращаем к центральной копии, чтобы избежать ограничений ScrollView
+    setTimeout(() => {
+      if (scrollViewRef.current) {
+        scrollViewRef.current.scrollTo({ y: centralIndex * itemHeight, animated: false });
+      }
+    }, 0);
     
     setSelectedValue(newValue);
     onValueChange(newValue);
     setIsScrolling(false);
-  };
+  }, [extendedValues, itemHeight, maxValue, minValue, onReachedMax, onReachedMin, selectedValue, totalValues]);
 
   // Обработка прокрутки (для анимации)
-  const onScroll = (event: any) => {
+  const onScroll = useCallback((event: any) => {
     if (!isScrolling) {
       setIsScrolling(true);
     }
     animation.setValue(event.nativeEvent.contentOffset.y);
-  };
+  }, [isScrolling]);
 
   // Для анимации прозрачности и масштаба
-  const getOpacity = (index: number) => {
+  const getOpacity = useCallback((index: number) => {
     const scrollValue = animation.interpolate({
       inputRange: [
         (index - 1) * itemHeight,
@@ -99,9 +108,9 @@ const Spinner: React.FC<SpinnerProps> = ({ value, onValueChange, maxValue, minVa
     });
     
     return scrollValue;
-  };
+  }, [animation, itemHeight]);
   
-  const getScale = (index: number) => {
+  const getScale = useCallback((index: number) => {
     const scrollValue = animation.interpolate({
       inputRange: [
         (index - 1) * itemHeight,
@@ -113,11 +122,11 @@ const Spinner: React.FC<SpinnerProps> = ({ value, onValueChange, maxValue, minVa
     });
     
     return scrollValue;
-  };
+  }, [animation, itemHeight]);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={styles.label} selectable={false}>{label}</Text>
       <View style={styles.spinnerContainer}>
         {/* Верхняя полупрозрачная область */}
         <View style={[styles.overlay, styles.topOverlay]} />
@@ -138,10 +147,8 @@ const Spinner: React.FC<SpinnerProps> = ({ value, onValueChange, maxValue, minVa
           snapToInterval={itemHeight}
           snapToAlignment="center"
           decelerationRate="fast"
-          // Начальная позиция для центрального значения
-          onLayout={() => {
-            scrollToValue(value);
-          }}
+          scrollEnabled={true}
+          keyboardShouldPersistTaps="handled"
         >
           {extendedValues.map((val, index) => {
             const opacity = getOpacity(index);
@@ -158,11 +165,16 @@ const Spinner: React.FC<SpinnerProps> = ({ value, onValueChange, maxValue, minVa
                     transform: isScrolling ? [{ scale }] : [{ scale: selectedValue === val ? 1 : 0.8 }]
                   }
                 ]}
+                pointerEvents="box-only"
               >
-                <Text style={[
-                  styles.itemText,
-                  selectedValue === val && styles.selectedItemText
-                ]}>
+                <Text 
+                  style={[
+                    styles.itemText,
+                    selectedValue === val && styles.selectedItemText
+                  ]}
+                  selectable={false}
+                  pointerEvents="none"
+                >
                   {val.toString().padStart(2, '0')}
                 </Text>
               </Animated.View>
@@ -172,7 +184,7 @@ const Spinner: React.FC<SpinnerProps> = ({ value, onValueChange, maxValue, minVa
       </View>
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {
