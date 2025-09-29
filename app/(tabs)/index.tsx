@@ -164,7 +164,7 @@ export default function CountdownScreen() {
             onReachedMax={handleHoursReachedMax}
             onReachedMin={handleHoursReachedMin}
           />
-          <Text style={[styles.separatorText]}>:</Text>
+          <Text style={[styles.separatorText]} selectable={false}>:</Text>
           <Spinner
             value={minutes}
             onValueChange={setMinutes}
@@ -173,7 +173,7 @@ export default function CountdownScreen() {
             onReachedMax={handleMinutesReachedMax}
             onReachedMin={handleMinutesReachedMin}
           />
-          <Text style={[styles.separatorText]}>:</Text>
+          <Text style={[styles.separatorText]} selectable={false}>:</Text>
           <Spinner
             value={seconds}
             onValueChange={setSeconds}

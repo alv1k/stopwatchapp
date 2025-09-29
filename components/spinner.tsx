@@ -44,11 +44,14 @@ const Spinner: React.FC<SpinnerProps> = React.memo(({ value, onValueChange, maxV
 
   // Обновляем выбранное значение, когда оно изменяется снаружи
   useEffect(() => {
+    console.log('spinner useeffect');
+    
     const constrainedValue = Math.max(minValue, Math.min(maxValue, value));
     setSelectedValue(constrainedValue);
     
     // Пересчитываем центральный индекс
     const newCenterIndex = totalValues + (constrainedValue - minValue);
+    
     if (scrollViewRef.current) {
       scrollViewRef.current.scrollTo({ y: newCenterIndex * itemHeight, animated: false });
     }
@@ -56,6 +59,7 @@ const Spinner: React.FC<SpinnerProps> = React.memo(({ value, onValueChange, maxV
 
   // Обработка окончания прокрутки
   const onScrollEnd = useCallback((event: any) => {
+    console.log('окончания прокрутки');
     const scrollY = Math.max(0, event.nativeEvent.contentOffset.y);
     const index = Math.round(scrollY / itemHeight);
     
@@ -64,10 +68,7 @@ const Spinner: React.FC<SpinnerProps> = React.memo(({ value, onValueChange, maxV
     
     // Получаем значение по индексу
     const newValue = extendedValues[validIndex];
-    
-    // Вычисляем индекс в центральной копии для позиционирования
-    const centralIndex = totalValues + (newValue - minValue);
-    
+  
     // Проверяем, достигли ли мы максимального или минимального значения при прокрутке
     if (selectedValue === maxValue && newValue !== maxValue && onReachedMax) {
       onReachedMax();
@@ -75,25 +76,17 @@ const Spinner: React.FC<SpinnerProps> = React.memo(({ value, onValueChange, maxV
       onReachedMin();
     }
     
-    // Возвращаем к центральной копии, чтобы избежать ограничений ScrollView
-    setTimeout(() => {
-      if (scrollViewRef.current) {
-        scrollViewRef.current.scrollTo({ y: centralIndex * itemHeight, animated: false });
-      }
-    }, 0);
-    
+    // Обновляем значение немедленно, до возврата к центральной копии
     setSelectedValue(newValue);
     onValueChange(newValue);
+    
     setIsScrolling(false);
   }, [extendedValues, itemHeight, maxValue, minValue, onReachedMax, onReachedMin, selectedValue, totalValues]);
 
   // Обработка прокрутки (для анимации)
   const onScroll = useCallback((event: any) => {
-    if (!isScrolling) {
-      setIsScrolling(true);
-    }
     animation.setValue(event.nativeEvent.contentOffset.y);
-  }, [isScrolling]);
+  }, [animation]);
 
   // Для анимации прозрачности и масштаба
   const getOpacity = useCallback((index: number) => {
@@ -139,17 +132,15 @@ const Spinner: React.FC<SpinnerProps> = React.memo(({ value, onValueChange, maxV
         
         <ScrollView
           ref={scrollViewRef}
-          onMomentumScrollEnd={onScrollEnd}
+          onScrollEndDrag={onScrollEnd}
           onScroll={onScroll}
-          scrollEventThrottle={16}
+          scrollEventThrottle={1}
           showsVerticalScrollIndicator={false}
           bounces={false}
           snapToInterval={itemHeight}
           snapToAlignment="center"
-          decelerationRate="fast"
-          scrollEnabled={true}
           keyboardShouldPersistTaps="handled"
-        >
+        > 
           {extendedValues.map((val, index) => {
             const opacity = getOpacity(index);
             const scale = getScale(index);
