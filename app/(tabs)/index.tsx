@@ -1,9 +1,12 @@
 import Spinner from '@/components/Spinner';
 import { ThemedView } from '@/components/themed-view';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Platform, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 
 export default function CountdownScreen() {
+
+  const screenHeight = useWindowDimensions().height;
+
   // Countdown state variables
   const [timeLeft, setTimeLeft] = useState(0); // Time left in milliseconds
   const [isRunning, setIsRunning] = useState(false);
@@ -153,36 +156,8 @@ export default function CountdownScreen() {
   return (
     <ThemedView style={styles.container}>
       <View style={styles.countdownSection}>        
-        <Text style={styles.timeText}>{formatTime(timeLeft)}</Text>
-        
-        <View style={{ flexDirection: 'row', justifyContent:'center', alignItems: 'center', marginBottom: 30 }}>
-          <Spinner
-            value={hours}
-            onValueChange={setHours}
-            maxValue={23}
-            label="ЧАСЫ"
-            onReachedMax={handleHoursReachedMax}
-            onReachedMin={handleHoursReachedMin}
-          />
-          <Text style={[styles.separatorText]} selectable={false}>:</Text>
-          <Spinner
-            value={minutes}
-            onValueChange={setMinutes}
-            maxValue={59}
-            label="МИН"
-            onReachedMax={handleMinutesReachedMax}
-            onReachedMin={handleMinutesReachedMin}
-          />
-          <Text style={[styles.separatorText]} selectable={false}>:</Text>
-          <Spinner
-            value={seconds}
-            onValueChange={setSeconds}
-            maxValue={59}
-            label="СЕК"
-          />
-        </View>
 
-        <View style={styles.quickSetContainer}>
+        {/* <View style={styles.quickSetContainer}>
           <TouchableOpacity 
             style={styles.quickSetButton}
             onPress={() => { setHours(0);setMinutes(5); setSeconds(0); }}
@@ -203,31 +178,71 @@ export default function CountdownScreen() {
           >
             <Text style={styles.buttonText}>15 МИН</Text>
           </TouchableOpacity>
+        </View> */}
+
+        <View style={{
+          gap: 10,
+          marginTop: -screenHeight / 8,
+        }}>
+          <View style={{ 
+            flexDirection: 'row', 
+            justifyContent:'center', 
+            alignItems: 'center',
+          }}>
+            <Spinner
+              value={hours}
+              onValueChange={setHours}
+              maxValue={23}
+              label="ЧАСЫ"
+              onReachedMax={handleHoursReachedMax}
+              onReachedMin={handleHoursReachedMin}
+            />
+            <Text style={[styles.separatorText]} selectable={false}>:</Text>
+            <Spinner
+              value={minutes}
+              onValueChange={setMinutes}
+              maxValue={59}
+              label="МИН"
+              onReachedMax={handleMinutesReachedMax}
+              onReachedMin={handleMinutesReachedMin}
+            />
+            <Text style={[styles.separatorText]} selectable={false}>:</Text>
+            <Spinner
+              value={seconds}
+              onValueChange={setSeconds}
+              maxValue={59}
+              label="СЕК"
+            />
+          </View>
+          
+          <View style={styles.buttonContainer}>
+            {!isRunning ? (
+              <TouchableOpacity 
+                style={[styles.startButton, styles.buttonParent]}
+                onPress={startCountdown}
+              >
+                <Text style={styles.buttonText}>СТАРТ</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity style={[styles.stopButton, styles.buttonParent]} onPress={stopCountdown}>
+                <Text style={styles.buttonText}>СТОП</Text>
+              </TouchableOpacity>
+            )}
+            
+            <TouchableOpacity 
+              style={[styles.resetButton, styles.buttonParent]} 
+              onPress={resetCountdown}
+            >
+              <Text style={styles.buttonText}>
+                СБРОС
+              </Text>
+            </TouchableOpacity>
+          </View>
+
         </View>
         
-        <View style={styles.buttonContainer}>
-          {!isRunning ? (
-            <TouchableOpacity 
-              style={styles.startButton}
-              onPress={startCountdown}
-            >
-              <Text style={styles.buttonText}>СТАРТ</Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity style={styles.stopButton} onPress={stopCountdown}>
-              <Text style={styles.buttonText}>СТОП</Text>
-            </TouchableOpacity>
-          )}
-          
-          <TouchableOpacity 
-            style={styles.resetButton} 
-            onPress={resetCountdown}
-          >
-            <Text style={styles.buttonText}>
-              {isRunning ? 'LAP' : 'RESET'}
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <Text style={styles.timeText}>{formatTime(timeLeft)}</Text>
+
       </View>
 
       
@@ -252,50 +267,40 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     color: '#333',
-    marginBottom: 50,
+    backgroundColor: '#b0d6d2',
+    padding: 20,
+    borderRadius: 5,
+    marginTop: 50
   },
   separatorText: {
-    fontSize: 50,
+    fontSize: 30,
     fontWeight: 'bold',
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     color: '#333',
-    marginBottom: 50,
+    marginTop: 30,
     marginHorizontal: 5,
   },
   buttonContainer: {
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'space-around',
     gap: 20,
-    width: '100%',
-    paddingHorizontal: 20,
+    width: 'auto'
+  },
+  buttonParent: {    
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    borderRadius: 30,
+    minWidth: 100,
+    alignItems: 'center',
   },
   startButton: {
     backgroundColor: '#4CAF50',
-    paddingVertical: 15,
-    paddingHorizontal: 30,
-    borderRadius: 30,
-    minWidth: 100,
-    alignItems: 'center',
   },
   stopButton: {
     backgroundColor: '#f44336',
-    paddingVertical: 15,
-    paddingHorizontal: 30,
-    borderRadius: 30,
-    minWidth: 100,
-    alignItems: 'center',
   },
   resetButton: {
     backgroundColor: '#9E9E9E',
-    paddingVertical: 15,
-    paddingHorizontal: 30,
-    borderRadius: 30,
-    minWidth: 100,
-    alignItems: 'center',
-  },
-  setTimeContainer: {
-    backgroundColor: 'yellow',
-    padding: 30
   },
   setTimeButton: {
     backgroundColor: '#c09317ff',

@@ -19,38 +19,24 @@ const Spinner: React.FC<SpinnerProps> = React.memo(({ value, onValueChange, maxV
   const scrollViewRef = useRef<ScrollView>(null);
   const itemHeight = 50; // высота каждого элемента
   
-  // Для циклической прокрутки создаем массив с повторяющимися значениями
-  // Используем нечетное количество повторений, чтобы центральная часть была корректной
-  const repetitionCount = 3;
+  // Создаем массив с одним набором значений
   const totalValues = maxValue - minValue + 1;
   const extendedValues = React.useMemo(() => {
     const values = [];
-    // Создаем 3 копии значений для циклической прокрутки
-    for (let rep = 0; rep < repetitionCount; rep++) {
-      for (let i = minValue; i <= maxValue; i++) {
-        values.push(i);
-      }
+    // Создаем один набор значений
+    for (let i = minValue; i <= maxValue; i++) {
+      values.push(i);
     }
     return values;
   }, [maxValue, minValue]);
-  
-  // Центральный индекс - середина центральной копии значений
-  const centerIndex = React.useMemo(() => {
-    // Первая треть - первая копия, вторая треть - центральная копия, третья треть - последняя копия
-    const centralStartIndex = totalValues; // после первой копии
-    const centralValueIndex = value - minValue; // индекс нужного значения в копии
-    return centralStartIndex + centralValueIndex;
-  }, [totalValues, value, minValue]);
 
   // Обновляем выбранное значение, когда оно изменяется снаружи
-  useEffect(() => {
-    console.log('spinner useeffect');
-    
+  useEffect(() => {    
     const constrainedValue = Math.max(minValue, Math.min(maxValue, value));
     setSelectedValue(constrainedValue);
     
     // Пересчитываем центральный индекс
-    const newCenterIndex = totalValues + (constrainedValue - minValue);
+    const newCenterIndex = constrainedValue - minValue;
     
     if (scrollViewRef.current) {
       scrollViewRef.current.scrollTo({ y: newCenterIndex * itemHeight, animated: false });
@@ -59,7 +45,6 @@ const Spinner: React.FC<SpinnerProps> = React.memo(({ value, onValueChange, maxV
 
   // Обработка окончания прокрутки
   const onScrollEnd = useCallback((event: any) => {
-    console.log('окончания прокрутки');
     const scrollY = Math.max(0, event.nativeEvent.contentOffset.y);
     const index = Math.round(scrollY / itemHeight);
     
@@ -76,12 +61,12 @@ const Spinner: React.FC<SpinnerProps> = React.memo(({ value, onValueChange, maxV
       onReachedMin();
     }
     
-    // Обновляем значение немедленно, до возврата к центральной копии
+    // Обновляем значение
     setSelectedValue(newValue);
     onValueChange(newValue);
     
     setIsScrolling(false);
-  }, [extendedValues, itemHeight, maxValue, minValue, onReachedMax, onReachedMin, selectedValue, totalValues]);
+  }, [extendedValues, itemHeight, maxValue, minValue, onReachedMax, onReachedMin, selectedValue]);
 
   // Обработка прокрутки (для анимации)
   const onScroll = useCallback((event: any) => {
@@ -122,13 +107,12 @@ const Spinner: React.FC<SpinnerProps> = React.memo(({ value, onValueChange, maxV
       <Text style={styles.label} selectable={false}>{label}</Text>
       <View style={styles.spinnerContainer}>
         {/* Верхняя полупрозрачная область */}
-        <View style={[styles.overlay, styles.topOverlay]} />
-        
+        {/* <View style={[styles.overlay, styles.topOverlay]} /> */}
         {/* Центральная область выбора */}
-        <View style={styles.selectionArea} pointerEvents="none" />
+        {/* <View style={styles.selectionArea} pointerEvents="none" /> */}
         
         {/* Нижняя полупрозрачная область */}
-        <View style={[styles.overlay, styles.bottomOverlay]} />
+        {/* <View style={[styles.overlay, styles.bottomOverlay]} /> */}
         
         <ScrollView
           ref={scrollViewRef}
@@ -189,7 +173,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   spinnerContainer: {
-    height: 3 * 50, // 3 элемента по 50px
+    height: 50, // 3 элемента по 50px
     width: 60,
     overflow: 'hidden',
     position: 'relative',
