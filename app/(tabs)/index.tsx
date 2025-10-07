@@ -1,7 +1,8 @@
 import Spinner from '@/components/Spinner';
 import { ThemedView } from '@/components/themed-view';
+import { globalStyles } from '@/styles/main';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Platform, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 
 export default function CountdownScreen() {
 
@@ -154,8 +155,8 @@ export default function CountdownScreen() {
   }, []);
 
   return (
-    <ThemedView style={styles.container}>
-      <View style={styles.countdownSection}>        
+    <ThemedView style={globalStyles.container}>
+      <View style={globalStyles.section}>        
 
         {/* <View style={styles.quickSetContainer}>
           <TouchableOpacity 
@@ -197,7 +198,7 @@ export default function CountdownScreen() {
               onReachedMax={handleHoursReachedMax}
               onReachedMin={handleHoursReachedMin}
             />
-            <Text style={[styles.separatorText]} selectable={false}>:</Text>
+            <Text style={[globalStyles.separatorText]} selectable={false}>:</Text>
             <Spinner
               value={minutes}
               onValueChange={setMinutes}
@@ -206,7 +207,7 @@ export default function CountdownScreen() {
               onReachedMax={handleMinutesReachedMax}
               onReachedMin={handleMinutesReachedMin}
             />
-            <Text style={[styles.separatorText]} selectable={false}>:</Text>
+            <Text style={[globalStyles.separatorText]} selectable={false}>:</Text>
             <Spinner
               value={seconds}
               onValueChange={setSeconds}
@@ -215,25 +216,25 @@ export default function CountdownScreen() {
             />
           </View>
           
-          <View style={styles.buttonContainer}>
+          <View style={globalStyles.buttonContainer}>
             {!isRunning ? (
               <TouchableOpacity 
-                style={[styles.startButton, styles.buttonParent]}
+                style={[globalStyles.startButton, globalStyles.buttonParent]}
                 onPress={startCountdown}
               >
-                <Text style={styles.buttonText}>СТАРТ</Text>
+                <Text style={globalStyles.buttonText}>СТАРТ</Text>
               </TouchableOpacity>
             ) : (
-              <TouchableOpacity style={[styles.stopButton, styles.buttonParent]} onPress={stopCountdown}>
-                <Text style={styles.buttonText}>СТОП</Text>
+              <TouchableOpacity style={[globalStyles.stopButton, globalStyles.buttonParent]} onPress={stopCountdown}>
+                <Text style={globalStyles.buttonText}>СТОП</Text>
               </TouchableOpacity>
             )}
             
             <TouchableOpacity 
-              style={[styles.resetButton, styles.buttonParent]} 
+              style={[globalStyles.resetButton, globalStyles.buttonParent]} 
               onPress={resetCountdown}
             >
-              <Text style={styles.buttonText}>
+              <Text style={globalStyles.buttonText}>
                 СБРОС
               </Text>
             </TouchableOpacity>
@@ -241,7 +242,7 @@ export default function CountdownScreen() {
 
         </View>
         
-        <Text style={styles.timeText}>{formatTime(timeLeft)}</Text>
+        <Text style={globalStyles.timeText}>{formatTime(timeLeft)}</Text>
 
       </View>
 
@@ -250,117 +251,4 @@ export default function CountdownScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    paddingTop: 50,
-    backgroundColor: '#f5f5f5',
-  },
-  countdownSection: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  timeText: {
-    fontSize: 50,
-    fontWeight: 'bold',
-    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-    color: '#333',
-    backgroundColor: '#b0d6d2',
-    padding: 20,
-    borderRadius: 5,
-    marginTop: 50
-  },
-  separatorText: {
-    fontSize: 30,
-    fontWeight: 'bold',
-    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-    color: '#333',
-    marginTop: 30,
-    marginHorizontal: 5,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    gap: 20,
-    width: 'auto'
-  },
-  buttonParent: {    
-    paddingVertical: 15,
-    paddingHorizontal: 30,
-    borderRadius: 30,
-    minWidth: 100,
-    alignItems: 'center',
-  },
-  startButton: {
-    backgroundColor: '#4CAF50',
-  },
-  stopButton: {
-    backgroundColor: '#f44336',
-  },
-  resetButton: {
-    backgroundColor: '#9E9E9E',
-  },
-  setTimeButton: {
-    backgroundColor: '#c09317ff',
-    paddingVertical: 15,
-    paddingHorizontal: 30,
-    borderRadius: 30,
-    minWidth: 100,
-    alignItems: 'center',
-  },
-  quickSetContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 10,
-    width: '100%',
-    paddingHorizontal: 20,
-    marginBottom: 20,
-  },
-  quickSetButton: {
-    backgroundColor: '#2196F3',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 20,
-    minWidth: 70,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  lapsSection: {
-    flex: 1,
-    marginTop: 20,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 15,
-    color: '#333',
-    textAlign: 'center',
-  },
-  lapsList: {
-    flex: 1,
-  },
-  lapItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  lapNumber: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#555',
-  },
-  lapTime: {
-    fontSize: 16,
-    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-    color: '#333',
-  },
-});
+

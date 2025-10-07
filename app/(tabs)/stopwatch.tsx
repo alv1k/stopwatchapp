@@ -1,6 +1,7 @@
 import { ThemedView } from '@/components/themed-view';
+import { globalStyles } from '@/styles/main';
 import React, { useEffect, useRef, useState } from 'react';
-import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
 export default function StopwatchScreen() {
   // Stopwatch state variables
@@ -65,26 +66,26 @@ export default function StopwatchScreen() {
   }, []);
 
   return (
-    <ThemedView style={styles.container}>
-      <View style={styles.stopwatchSection}>
-        <Text style={styles.timeText}>{formatTime(time)}</Text>
+    <ThemedView style={globalStyles.container}>
+      <View style={globalStyles.section}>
+        <Text style={globalStyles.stopwatchTimeText}>{formatTime(time)}</Text>
         
-        <View style={styles.buttonContainer}>
+        <View style={globalStyles.buttonContainer}>
           {!isRunning ? (
-            <TouchableOpacity style={styles.startButton} onPress={startStopwatch}>
-              <Text style={styles.buttonText}>СТАРТ</Text>
+            <TouchableOpacity style={[globalStyles.startButton, globalStyles.buttonParent]} onPress={startStopwatch}>
+              <Text style={globalStyles.buttonText}>СТАРТ</Text>
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity style={styles.stopButton} onPress={stopStopwatch}>
-              <Text style={styles.buttonText}>СТОП</Text>
+            <TouchableOpacity style={[globalStyles.stopButton, globalStyles.buttonParent]} onPress={stopStopwatch}>
+              <Text style={globalStyles.buttonText}>СТОП</Text>
             </TouchableOpacity>
           )}
           
           <TouchableOpacity 
-            style={styles.resetButton} 
+            style={[globalStyles.resetButton, globalStyles.buttonParent]} 
             onPress={isRunning ? recordLap : resetStopwatch}
           >
-            <Text style={styles.buttonText}>
+            <Text style={globalStyles.buttonText}>
               {isRunning ? 'LAP' : 'RESET'}
             </Text>
           </TouchableOpacity>
@@ -92,13 +93,13 @@ export default function StopwatchScreen() {
       </View>
 
       {laps.length > 0 && (
-        <View style={styles.lapsSection}>
-          <Text style={styles.sectionTitle}>Laps</Text>
-          <ScrollView style={styles.lapsList}>
+        <View style={globalStyles.lapsSection}>
+          <Text style={globalStyles.sectionTitle}>Laps</Text>
+          <ScrollView style={globalStyles.lapsList}>
             {laps.map((lapTime, index) => (
-              <View key={index} style={styles.lapItem}>
-                <Text style={styles.lapNumber}>Lap {laps.length - index}</Text>
-                <Text style={styles.lapTime}>{formatTime(lapTime)}</Text>
+              <View key={index} style={globalStyles.lapItem}>
+                <Text style={globalStyles.lapNumber}>Lap {laps.length - index}</Text>
+                <Text style={globalStyles.lapTime}>{formatTime(lapTime)}</Text>
               </View>
             ))}
           </ScrollView>
@@ -108,91 +109,4 @@ export default function StopwatchScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    paddingTop: 50,
-    backgroundColor: '#f5f5f5',
-  },
-  stopwatchSection: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  timeText: {
-    fontSize: 60,
-    fontWeight: 'bold',
-    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-    color: '#333',
-    marginBottom: 50,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 20,
-    width: '100%',
-    paddingHorizontal: 20,
-  },
-  startButton: {
-    backgroundColor: '#4CAF50',
-    paddingVertical: 15,
-    paddingHorizontal: 30,
-    borderRadius: 30,
-    minWidth: 100,
-    alignItems: 'center',
-  },
-  stopButton: {
-    backgroundColor: '#f44336',
-    paddingVertical: 15,
-    paddingHorizontal: 30,
-    borderRadius: 30,
-    minWidth: 100,
-    alignItems: 'center',
-  },
-  resetButton: {
-    backgroundColor: '#9E9E9E',
-    paddingVertical: 15,
-    paddingHorizontal: 30,
-    borderRadius: 30,
-    minWidth: 100,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  lapsSection: {
-    flex: 1,
-    marginTop: 20,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 15,
-    color: '#333',
-    textAlign: 'center',
-  },
-  lapsList: {
-    flex: 1,
-  },
-  lapItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  lapNumber: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#555',
-  },
-  lapTime: {
-    fontSize: 16,
-    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-    color: '#333',
-  },
-});
+
