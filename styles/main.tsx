@@ -67,6 +67,15 @@ export const globalStyles = StyleSheet.create({
     textAlign: 'center',
   },
   
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    backgroundColor: '#f0f0f0',
+  },
+  
   // Кнопки
   buttonParent: {
     paddingVertical: 15,
