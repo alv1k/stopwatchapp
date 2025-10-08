@@ -1,13 +1,12 @@
 import { ThemedView } from '@/components/themed-view';
 import { globalStyles } from '@/styles/main';
 import React, { useEffect, useRef, useState } from 'react';
-import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 
 export default function StopwatchScreen() {
   // Stopwatch state variables
   const [time, setTime] = useState(0); // Time in milliseconds
   const [isRunning, setIsRunning] = useState(false);
-  const [laps, setLaps] = useState<number[]>([]);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Calculate formatted time
@@ -46,15 +45,8 @@ export default function StopwatchScreen() {
     }
     setTime(0);
     setIsRunning(false);
-    setLaps([]);
   };
 
-  // Record a lap time
-  const recordLap = () => {
-    if (isRunning) {
-      setLaps([...laps, time]);
-    }
-  };
 
   // Cleanup on component unmount
   useEffect(() => {
@@ -91,20 +83,6 @@ export default function StopwatchScreen() {
           </TouchableOpacity>
         </View>
       </View>
-
-      {laps.length > 0 && (
-        <View style={globalStyles.lapsSection}>
-          <Text style={globalStyles.sectionTitle}>Laps</Text>
-          <ScrollView style={globalStyles.lapsList}>
-            {laps.map((lapTime, index) => (
-              <View key={index} style={globalStyles.lapItem}>
-                <Text style={globalStyles.lapNumber}>Lap {laps.length - index}</Text>
-                <Text style={globalStyles.lapTime}>{formatTime(lapTime)}</Text>
-              </View>
-            ))}
-          </ScrollView>
-        </View>
-      )}
     </ThemedView>
   );
 }
